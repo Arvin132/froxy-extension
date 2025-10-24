@@ -7,7 +7,7 @@ interface AuthContainerProps {
   onAuthSuccess: () => void;
 }
 
-export const AuthContainer: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
+export const  AuthContainer: React.FC<AuthContainerProps> = ({ onAuthSuccess }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +37,7 @@ export const AuthContainer: React.FC<AuthContainerProps> = ({ onAuthSuccess }) =
   };
 
   return (
-    <div className="w-96 bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
       <Header />
       
       <div className="p-6 flex flex-col items-center">

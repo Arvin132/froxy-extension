@@ -25,7 +25,6 @@ async function getWhatsAppMessages() {
       };
     }
 
-    // Check if it's WhatsApp Web
     if (!activeTab.url?.includes('web.whatsapp.com')) {
       return {
         success: false,
@@ -33,7 +32,6 @@ async function getWhatsAppMessages() {
       };
     }
 
-    // Extract messages from the content script
     const response = await chrome.tabs.sendMessage(activeTab.id, {
       type: 'EXTRACT_WHATSAPP_MESSAGES',
     });

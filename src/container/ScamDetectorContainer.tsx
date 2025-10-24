@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Header } from '../components/Header';
-import { ModeToggle } from '../components/ModeToggle';
+import { PlatformSelector } from '../components/PlatformSelector';
 import { ManualInput } from '../components/ManualInput';
 import { StatusBadge } from '../components/StatusBadge';
 import { ThreatIndicator } from '../components/ThreatIndicator';
@@ -8,17 +8,19 @@ import { AnalyzeButton } from '../components/AnalyzeButton';
 import { InfoFooter } from '../components/InfoFooter';
 import { RiskFactors } from '../components/RiskFactors';
 import { getStatus, getGradientColor } from '../utils/helper';
-import { AnalysisMode } from '../types';
+import { Platform } from '../types';
 import { apiService } from '../services/api';
+import { AnalysisContent } from '@/components/AnalysisContent';
 
 export const ScamDetectorContainer: React.FC = () => {
-  const [mode, setMode] = useState<AnalysisMode>('auto');
+  const [platform, setPlatform] = useState<Platform>('whatsapp');
   const [manualText, setManualText] = useState<string>('');
   const [scamScore, setScamScore] = useState<number | null>(null);
   const [riskFactors, setRiskFactors] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [apiHealthy, setApiHealthy] = useState<boolean>(false);
+  const [analysisContent, setAnalysisContent] = useState<string>('');
 
   // Check API connection on mount
   useEffect(() => {
@@ -34,10 +36,15 @@ export const ScamDetectorContainer: React.FC = () => {
 
     checkConnection();
   }, []);
+
+  const handleLogout = () => {
+    apiService.logout();
+    window.location.reload(); // Reload to show auth screen
+  };
   
   const handleAnalyze = async (): Promise<void> => {
-    // Validate manual mode has text
-    if (mode === 'manual' && !manualText.trim()) {
+    // Validate text is present
+    if (!manualText.trim()) {
       return;
     }
 
@@ -51,16 +58,10 @@ export const ScamDetectorContainer: React.FC = () => {
     setError(null);
     
     try {
-      if (mode === 'manual') {
-        // Analyze manual text
-        const result = await apiService.analyzeMessage(manualText);
-        console.log(result)
-        setScamScore(result.score);
-        setRiskFactors(result.labels);
-      } else {
-        // Auto-detect from page (work in progress)
-        setError('Auto-detection feature is coming soon!');
-      }
+      const result = await apiService.analyzeMessage(manualText, platform);
+      setScamScore(result.score);
+      setRiskFactors(result.labels);
+      setAnalysisContent(result.analysis_content);
     } catch (err) {
       console.error('Analysis failed:', err);
       setError(err instanceof Error ? err.message : 'Analysis failed. Please try again.');
@@ -71,26 +72,34 @@ export const ScamDetectorContainer: React.FC = () => {
     }
   };
 
-  const handleModeChange = (newMode: AnalysisMode): void => {
-    setMode(newMode);
-    // Reset analysis when switching modes
+  const handlePlatformChange = (newPlatform: Platform): void => {
+    setPlatform(newPlatform);
     setScamScore(null);
     setRiskFactors([]);
-    setManualText('');
     setError(null);
+    setAnalysisContent('')
   };
   
   const status = getStatus(scamScore);
   const StatusIcon = status.icon;
 
-  // Disable analyze button if in manual mode and no text, or if API is not healthy
-  const isAnalyzeDisabled = (mode === 'manual' && !manualText.trim()) || !apiHealthy;
+  // Disable analyze button if no text or API not healthy
+  const isAnalyzeDisabled = !manualText.trim() || !apiHealthy;
 
   return (
-    <div className="w-96 bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
       <Header />
       
       <div className="p-6">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleLogout}
+            className="text-sm text-gray-600 hover:text-red-600 transition-colors font-medium"
+          >
+            Logout
+          </button>
+        </div>
+
         {!apiHealthy && (
           <div className="mb-4 bg-yellow-50 border-2 border-yellow-300 rounded-xl p-3">
             <p className="text-xs text-yellow-800 text-center">
@@ -99,13 +108,13 @@ export const ScamDetectorContainer: React.FC = () => {
           </div>
         )}
 
-        <ModeToggle mode={mode} onModeChange={handleModeChange} />
+        <PlatformSelector selectedPlatform={platform} onChange={handlePlatformChange} />
         
-        {mode === 'manual' && (
-          <ManualInput value={manualText} onChange={setManualText} />
-        )}
+        <ManualInput value={manualText} onChange={setManualText} platform={platform} />
+
+        {analysisContent && <AnalysisContent content={analysisContent} />}
         
-        { riskFactors.length > 0 && <RiskFactors riskFactors={riskFactors} />}
+        {riskFactors.length > 0 && <RiskFactors riskFactors={riskFactors} />}
         
         <StatusBadge status={status} StatusIcon={StatusIcon} />
         
@@ -120,9 +129,8 @@ export const ScamDetectorContainer: React.FC = () => {
           disabled={isAnalyzeDisabled}
         />
         
-        <InfoFooter scamScore={scamScore} mode={mode} error={error} />
+        <InfoFooter scamScore={scamScore} platform={platform} error={error} />
       </div>
     </div>
   );
 };
-

@@ -27,23 +27,24 @@ function extractWhatsAppMessages(): WhatsAppMessage[] {
 }
 
 function isWhatsAppChatOpen(): boolean {
-  const chatPane = document.querySelector('[data-testid="conversation-panel-wrapper"]');
-  const messagesContainer = document.querySelector('[data-testid="conversation-panel-body"]');
-  return !!(chatPane && messagesContainer);
+  const chatHeader = document.querySelector('[data-testid="conversation-header"]');
+
+  return !!chatHeader;
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'EXTRACT_WHATSAPP_MESSAGES') {
     try {
-      if (!isWhatsAppChatOpen()) {
-        sendResponse({ 
-          success: false, 
-          error: 'No WhatsApp chat is currently open. Please open a conversation first.' 
-        });
-        return;
-      }
+    //   if (!isWhatsAppChatOpen()) {
+    //     sendResponse({ 
+    //       success: false, 
+    //       error: 'No WhatsApp chat is currently open. Please open a conversation first.' 
+    //     });
+    //     return;
+    //   }
 
       const messages = extractWhatsAppMessages();
+      console.log(messages)
       
       if (messages.length === 0) {
         sendResponse({ 

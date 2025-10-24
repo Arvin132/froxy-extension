@@ -12,18 +12,37 @@ export default defineManifest({
     default_icon: {
       48: 'public/logo.png',
     },
-    default_popup: 'src/popup/index.html',
+    default_popup: 'src/popup/index.html'
   },
   permissions: [
     'sidePanel',
     'contentSettings',
+    'storage',
+    'activeTab',
+    'tabs'
   ],
-  
-  content_scripts: [{
-    js: ['src/content/main.tsx'],
-    matches: ['https://*/*'],
-  }],
+
+  // content_scripts: [
+  //   {
+  //     js: ['src/content/main.tsx'],
+  //     matches: ['https://*/*'],
+  //   },
+  //   // {
+  //   //   matches: ['https://web.whatsapp.com/*'],
+  //   //   js: ['src/content/whatsapp/whatsapp.ts'],
+  //   //   run_at: 'document_idle',
+  //   // }
+  // ],
   side_panel: {
     default_path: 'src/sidepanel/index.html',
   },
+
+  // background: {
+  //   service_worker: 'src/background/background.ts',
+  // },
+
+  host_permissions: [
+    // 'https://web.whatsapp.com/*',
+    'http://localhost:8000/*',
+  ],
 })

@@ -1,12 +1,12 @@
-import { AnalysisMode } from '../types';
+import { Platform } from '../types';
 
 interface InfoFooterProps {
   scamScore: number | null;
-  mode: AnalysisMode;
+  platform: Platform;
   error?: string | null;
 }
 
-export const InfoFooter: React.FC<InfoFooterProps> = ({ scamScore, mode, error }) => {
+export const InfoFooter: React.FC<InfoFooterProps> = ({ scamScore, platform, error }) => {
   if (error) {
     return (
       <div className="mt-6 pt-4 border-t border-gray-200">
@@ -19,9 +19,7 @@ export const InfoFooter: React.FC<InfoFooterProps> = ({ scamScore, mode, error }
 
   const getMessage = () => {
     if (scamScore === null) {
-      return mode === 'auto' 
-        ? 'Auto detection will scan messages on this page (Coming Soon)'
-        : 'Paste a message above and click analyze';
+      return 'Select a template, paste your chat, and click analyze';
     }
     return 'Analysis complete';
   };

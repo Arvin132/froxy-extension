@@ -1,7 +1,5 @@
 import { API_CONFIG } from '../config/api';
-import { AnalysisResponse, AnalysisRequest, LoginRequest, RegisterRequest, AuthResponse, UserResponse, ChatMessage } from '../types';
-
-
+import { AnalysisResponse, AnalysisRequest, LoginRequest, RegisterRequest, AuthResponse, UserResponse } from '../types';
 
 class ApiService {
   private baseUrl: string;
@@ -9,21 +7,25 @@ class ApiService {
 
   constructor() {
     this.baseUrl = API_CONFIG.BASE_URL;
-    // Load token from storage on initialization
     this.token = this.getStoredToken();
   }
 
   private getStoredToken(): string | null {
     try {
-      return sessionStorage.getItem('froxy_token');
+      if (localStorage.getItem('froxy_token') === null) {
+        throw ""
+      }
+      return localStorage.getItem('froxy_token');
     } catch {
+      console.log("No Stored token")
       return null;
     }
   }
 
   private setStoredToken(token: string): void {
     try {
-      sessionStorage.setItem('froxy_token', token);
+      console.log("Setting the froxy token as " + token)
+      localStorage.setItem('froxy_token', token);
       this.token = token;
     } catch (error) {
       console.error('Failed to store token:', error);
@@ -32,19 +34,15 @@ class ApiService {
 
   private clearStoredToken(): void {
     try {
-      sessionStorage.removeItem('froxy_token');
+      localStorage.removeItem('froxy_token');
       this.token = null;
     } catch (error) {
       console.error('Failed to clear token:', error);
     }
   }
 
-  /**
-   * Login user
-   */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      // Backend expects form data for OAuth2
       const formData = new URLSearchParams();
       formData.append('username', credentials.username);
       formData.append('password', credentials.password);
@@ -71,10 +69,7 @@ class ApiService {
     }
   }
 
-  /**
-   * Register new user
-   */
-  async register(credentials: RegisterRequest): Promise<AuthResponse> {
+  async register(credentials: RegisterRequest): Promise<UserResponse> {
     try {
       const response = await fetch(`${this.baseUrl}${API_CONFIG.ENDPOINTS.REGISTER}`, {
         method: 'POST',
@@ -90,7 +85,6 @@ class ApiService {
       }
 
       const data = await response.json();
-      this.setStoredToken(data.access_token);
       return data;
     } catch (error) {
       console.error('Registration error:', error);
@@ -98,9 +92,6 @@ class ApiService {
     }
   }
 
-  /**
-   * Get current user
-   */
   async getCurrentUser(): Promise<UserResponse> {
     try {
       const response = await fetch(`${this.baseUrl}${API_CONFIG.ENDPOINTS.GET_ME}`, {
@@ -135,37 +126,16 @@ class ApiService {
     return !!this.token;
   }
 
-  async analyzeMessage(message: string, platform: string = 'manual'): Promise<AnalysisResponse> {
-    const requestBody: AnalysisRequest = {
-      messages: [
-        {
-          sender: 'user',
-          content: message,
-        },
-      ],
-      platform: platform,
-    };
-
-    return this.sendAnalysisRequest(requestBody);
-  }
-
   /**
-   * Analyze multiple messages (auto mode - WhatsApp)
+   * Analyze messages for scam detection
    */
-  async analyzeMessages(messages: ChatMessage[], platform: string): Promise<AnalysisResponse> {
-    const requestBody: AnalysisRequest = {
-      messages: messages,
-      platform: platform,
-    };
-
-    return this.sendAnalysisRequest(requestBody);
-  }
-
-  /**
-   * Send analysis request to backend
-   */
-  private async sendAnalysisRequest(requestBody: AnalysisRequest): Promise<AnalysisResponse> {
+  async analyzeMessage(content: string, platform: string = 'manual'): Promise<AnalysisResponse> {
     try {
+      const requestBody: AnalysisRequest = {
+        chat_content: content,
+        platform: platform,
+      };
+
       const response = await fetch(`${this.baseUrl}${API_CONFIG.ENDPOINTS.ANALYZE}`, {
         method: 'POST',
         headers: {

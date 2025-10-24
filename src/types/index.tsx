@@ -8,7 +8,7 @@ export interface Status {
   icon: LucideIcon;
 }
 
-export type AnalysisMode = 'auto' | 'manual';
+export type Platform = 'whatsapp' | 'telegram' | 'messenger' | 'generic';
 
 // API Request Types
 export interface ChatMessage {
@@ -17,7 +17,7 @@ export interface ChatMessage {
 }
 
 export interface AnalysisRequest {
-  messages: ChatMessage[];
+  chat_content: string;
   platform: string;
 }
 
